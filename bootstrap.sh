@@ -78,39 +78,4 @@ ZSH_CUSTOM="$USER_HOME/.oh-my-zsh/custom"
 # Change shell
 chsh -s $(which zsh) $REAL_USER
 
-# --- Interactive Hostname Setup ---
-# Only runs if the script is attached to a terminal (stdin)
-if [ -t 0 ]; then
-    echo ""
-    read -p "Do you want to set the hostname now? (y/N): " SET_HOST
-    if [[ "$SET_HOST" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        read -p "Enter new hostname (e.g., vps-prod-01): " NEW_HOSTNAME
-        if [ -n "$NEW_HOSTNAME" ]; then
-            echo "Setting hostname to $NEW_HOSTNAME..."
-            
-            # 1. Set static hostname
-            hostnamectl set-hostname "$NEW_HOSTNAME"
-            
-            # 2. Update /etc/hosts
-            if grep -q "127.0.1.1" /etc/hosts; then
-                sed -i "s/^127.0.1.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
-            else
-                echo "127.0.1.1 $NEW_HOSTNAME" >> /etc/hosts
-            fi
-            
-            # 3. Optional Pretty Name
-            read -p "Enter Pretty Name (Optional): " PRETTY_NAME
-            [ -n "$PRETTY_NAME" ] && hostnamectl set-hostname "$PRETTY_NAME" --pretty
-            
-            echo "Hostname configured."
-        fi
-    fi
-
-    echo ""
-    read -p "Bootstrap finished. Reboot now to apply all changes? (y/N): " REBOOT_NOW
-    if [[ "$REBOOT_NOW" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        reboot
-    fi
-fi
-
-echo "--- Setup Complete! Please log out and back in. ---"
+echo "--- Setup Complete! Please reboot now. ---"
