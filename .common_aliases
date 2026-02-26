@@ -1,0 +1,45 @@
+# --- Navigation ---
+alias ..='cd ..'
+alias ...='cd ../..'
+alias h='cd ~'
+alias dot='cd ~/.dotfiles'
+
+# --- Modern CLI Tools ---
+alias ls='eza --icons --group-directories-first'
+alias ll='eza -lh --icons --git'
+alias lt='eza --tree --level=2 --icons'
+alias top='btop'
+alias du='ncdu'
+
+# --- Docker & Compose ---
+alias dcu='sudo docker compose up -d'
+alias dcd='sudo docker compose down'
+alias dcl='sudo docker compose logs -f'
+alias dcr='sudo docker compose restart'
+alias dps='sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+alias dstats='sudo docker stats --no-stream'
+alias dclean='sudo docker system prune -af --volumes'
+
+# --- Tailscale ---
+alias tss='tailscale status'
+alias tip='tailscale ip -4'
+
+# --- System & Network ---
+alias myip='curl -s https://ifconfig.me && echo'
+alias ports='sudo netstat -tulpn | grep LISTEN'
+alias reload='source ~/.zshrc'
+
+# --- Sync Aliases ---
+# Pulls latest from GitHub, re-sources the shell, and returns to where you were
+alias update-dots='cd ~/.dotfiles && git pull && source ~/.zshrc && cd -'
+
+# --- Functions ---
+# Create and enter directory
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Quick Docker Exec
+dexec() {
+    sudo docker exec -it "$1" /bin/bash || sudo docker exec -it "$1" /bin/sh
+}
