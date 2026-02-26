@@ -1,5 +1,6 @@
 #!/bin/bash
 # Optimized for Ubuntu 24.04 - "Zero-Edit" Version
+# Repo: https://github.com/formless63/vps-util
 
 set -e 
 
@@ -43,7 +44,10 @@ USER_HOME=$(eval echo ~$REAL_USER)
 
 # Install Oh My Zsh if missing
 if [ ! -d "$USER_HOME/.oh-my-zsh" ]; then
-    sudo -u $REAL_USER sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    echo "Installing Oh My Zsh (Unattended)..."
+    # RUNZSH=no prevents the installer from starting a new shell and killing this script
+    # CHSH=no prevents the installer from asking to change shell interactively
+    sudo -u $REAL_USER RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
 
 # 5. The "Dotfiles" Sync (Clone the repo)
@@ -59,8 +63,8 @@ fi
 # Symlink the alias file
 sudo -u $REAL_USER ln -sf "$DOTFILES_DIR/.common_aliases" "$USER_HOME/.common_aliases"
 
-# 6. Configure Zsh
-# Enable plugins and source the alias file
+# 6. Configure Zsh Plugins & Aliases
+# We modify .zshrc after OMZ is installed
 sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' "$USER_HOME/.zshrc"
 if ! grep -q "source ~/.common_aliases" "$USER_HOME/.zshrc"; then
     echo "[[ -f ~/.common_aliases ]] && source ~/.common_aliases" >> "$USER_HOME/.zshrc"
@@ -68,13 +72,14 @@ fi
 
 # Clone Zsh Plugins
 ZSH_CUSTOM="$USER_HOME/.oh-my-zsh/custom"
-sudo -u $REAL_USER git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions || true
-sudo -u $REAL_USER git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting || true
+[ ! -d "${ZSH_CUSTOM}/plugins/zsh-autosuggestions" ] && sudo -u $REAL_USER git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+[ ! -d "${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting" ] && sudo -u $REAL_USER git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
 
 # Change shell
 chsh -s $(which zsh) $REAL_USER
 
 # --- Interactive Hostname Setup ---
+# Only runs if the script is attached to a terminal (stdin)
 if [ -t 0 ]; then
     echo ""
     read -p "Do you want to set the hostname now? (y/N): " SET_HOST
@@ -83,32 +88,29 @@ if [ -t 0 ]; then
         if [ -n "$NEW_HOSTNAME" ]; then
             echo "Setting hostname to $NEW_HOSTNAME..."
             
-            # 1. Set the static hostname
+            # 1. Set static hostname
             hostnamectl set-hostname "$NEW_HOSTNAME"
             
-            # 2. Update /etc/hosts to prevent sudo resolution delays
+            # 2. Update /etc/hosts
             if grep -q "127.0.1.1" /etc/hosts; then
                 sed -i "s/^127.0.1.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
             else
                 echo "127.0.1.1 $NEW_HOSTNAME" >> /etc/hosts
             fi
             
-            # 3. Optional Metadata
-            read -p "Enter Pretty Name (e.g., Will's Web Server) [Optional]: " PRETTY_NAME
+            # 3. Optional Pretty Name
+            read -p "Enter Pretty Name (Optional): " PRETTY_NAME
             [ -n "$PRETTY_NAME" ] && hostnamectl set-hostname "$PRETTY_NAME" --pretty
             
-            read -p "Enter Icon Name (e.g., computer-vm, server) [Optional]: " ICON_NAME
-            [ -n "$ICON_NAME" ] && hostnamectl set-hostname "$ICON_NAME" --icon-name
-            
-            echo "Hostname configured. Changes will reflect on next login."
+            echo "Hostname configured."
         fi
     fi
 
-    # Reboot Prompt
-    read -p "Recommended: Reboot now to apply kernel updates and hostname? (y/N): " REBOOT_NOW
+    echo ""
+    read -p "Bootstrap finished. Reboot now to apply all changes? (y/N): " REBOOT_NOW
     if [[ "$REBOOT_NOW" =~ ^([yY][eE][sS]|[yY])$ ]]; then
         reboot
     fi
 fi
 
-echo "--- Setup Complete! Log out and back in. ---"
+echo "--- Setup Complete! Please log out and back in. ---"
