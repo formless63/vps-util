@@ -37,3 +37,4 @@ Make sure the variables at the top of your `bootstrap.sh` match your actual GitH
 GITHUB_USER="${GH_USER:-formless63}" 
 REPO_NAME="${GH_REPO:-vps-util}"
 BRANCH="${GH_BRANCH:-main}"
+```
