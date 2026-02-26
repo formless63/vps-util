@@ -18,7 +18,6 @@ curl -sL https://raw.githubusercontent.com/formless63/vps-util/main/bootstrap.sh
 - Tailscale: Installs and prepares Tailscale for login.
 - Shell: Installs Zsh, Oh-My-Zsh, and productivity plugins (autosuggestions/highlighting).
 - Sync: Clones this repo to ~/.dotfiles and symlinks .common_aliases.
-- Prompts to set hostname details from user input (ignored if terminal is not interactive).
 
 ##  Updating Aliases
 Since the alias file is symlinked to the git repo in ~/.dotfiles, updating is easy:
